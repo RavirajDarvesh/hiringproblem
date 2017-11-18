@@ -35,49 +35,59 @@ def assignWeight(candidate,availableCriteriaList):
     weightagePH                 = 0.12
     weightageLocation           = 0.06
     tempCandidate = candidate
-    # print(candidate)
+    score = 0
+    # candidateScore =
     for x in candidate:
         if x=='PERCENTAGE':
             if int(candidate[x])>=60:
                 tempCandidate[x] = weightagePercentage
+                score = score + weightagePercentage
             else:
                 tempCandidate[x] = 0
         if x=='BACKLOG':
             if int(candidate[x])==0:
                 tempCandidate[x] = weightageBacklog
+                score = score + weightageBacklog
             else:
                 tempCandidate[x] = 0
         if x=='LOCATION':
             if  candidate[x]:
                 tempCandidate[x] = weightageLocation
+                score = score + weightageLocation
             else:
                 tempCandidate[x] = 0
         if x=='LANGUAGES':
             if int(candidate[x])>0:
                 tempCandidate[x] = weightageLanguage
+                score = score + weightageLanguage
             else:
                 tempCandidate[x] = 0
         if x=='CERTIFICATION':
             if int(candidate[x])>0:
                 tempCandidate[x] = weightageCertification
+                score = score + weightageCertification
             else:
                 tempCandidate[x] = 0
         if x=='HOBBIES':
             if int(candidate[x])>0:
                 tempCandidate[x] = weightageHobbie
+                score = score + weightageHobbie
             else:
                 tempCandidate[x] = 0
         if x=='PH':
             if candidate[x]=='NO':
                 tempCandidate[x] = weightagePH
+                score = score + weightagePH
             else:
                 tempCandidate[x] = 0
         if x=='EXPERIENCE':
             if int(candidate[x])>0:
                 tempCandidate[x] = weightageExperience
+                score = score + weightageExperience
             else:
                 tempCandidate[x] = 0
     candidateScore = tempCandidate
+    candidateScore['score'] = score
     tempCandidate = []
     return candidateScore
 
@@ -95,8 +105,12 @@ def checkEligibilty(candidateScore, tolerance):
         status = False
     return status
 
-
-
+#Function to choose a candidate from a List without repetation
+def choice_without_repetition(lst):
+    i = 0
+    while True:
+        i = (i + random.randrange(1, len(lst))) % len(lst)
+        yield lst[i]
 
 if __name__ == '__main__':
     candidates = ImportCandidate()
@@ -105,8 +119,35 @@ if __name__ == '__main__':
     processedData = processRawData(rawCsvData)
     availableCandidateList = processedData[1]
     availableCriteriaList  = processedData[0][2:]
-    # print(availableCriteriaList)
+    print(type(availableCriteriaList))
     toleranceCriteria = int(input("There are %s Criteria in your Excel Sheet, Enter the minimum allowed Criteria: " %(len(availableCriteriaList))))
-    eligible
+    numberOfCandidateRequired = int(input("How many candidates you are looking for?\n:"))
+    minimumCandidatePopulation = numberOfCandidateRequired + 3
+
+    #Assign Key "IsEligible" to available candidate list, so that it can  hold value for their Eligibility.
     for candidate in availableCandidateList:
-        print(candidate['ID']," ",checkEligibilty(assignWeight(candidate, availableCriteriaList), toleranceCriteria))
+        eligibilty = checkEligibilty(assignWeight(candidate, availableCriteriaList), toleranceCriteria)
+        if eligibilty==True:
+            candidate['isEligible'] = True
+        else:
+            candidate['isEligible'] = False
+    IsEligibleCandidate = []
+    for number in range(len(availableCandidateList)):
+        if availableCandidateList[number]['isEligible']:
+            IsEligibleCandidate.append(availableCandidateList[number])
+    pprint.pprint(len(IsEligibleCandidate))
+
+    
+    #Select Random Population for sorting from the given list if IsEligibleCandidate
+    while len(IsEligibleCandidate)>=minimumCandidatePopulation:
+        data = random.sample(IsEligibleCandidate,minimumCandidatePopulation)
+        for candidate in data:
+            for tempCandidate in IsEligibleCandidate:
+                if candidate['ID']==tempCandidate['ID']:
+                    IsEligibleCandidate.remove(tempCandidate)
+
+
+
+    # pprint.pprint(IsEligibleCandidate)
+    # print(len(data))
+    # pprint.pprint(data)
