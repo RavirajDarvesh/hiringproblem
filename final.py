@@ -2,11 +2,8 @@ import random
 import pprint
 from Candidates import ImportCandidate
 import itertools
-import pprint
 
 def processRawData(rawCsvData=None):
-    # experinceScore = 0.3*4
-    # candidateScore = experinceScore + percentageScore - backlogScore
     columnHeader = rawCsvData[0]
     rows         = rawCsvData[1:]
     availableCandidateList = []
@@ -106,11 +103,18 @@ def checkEligibilty(candidateScore, tolerance):
     return status
 
 #Function to choose a candidate from a List without repetation
-def choice_without_repetition(lst):
-    i = 0
-    while True:
-        i = (i + random.randrange(1, len(lst))) % len(lst)
-        yield lst[i]
+# def choice_without_repetition(lst):
+#     i = 0
+#     while True:
+#         i = (i + random.randrange(1, len(lst))) % len(lst)
+#         yield lst[i]
+
+def getFinalScore(candidates):
+    score = 0
+    for candidate in candidates:
+        if candidate['score']:
+            score = score + float(candidate['score'])
+    return score
 
 if __name__ == '__main__':
     candidates = ImportCandidate()
@@ -135,18 +139,27 @@ if __name__ == '__main__':
     for number in range(len(availableCandidateList)):
         if availableCandidateList[number]['isEligible']:
             IsEligibleCandidate.append(availableCandidateList[number])
-    pprint.pprint(len(IsEligibleCandidate))
+    # pprint.pprint(len(IsEligibleCandidate))
 
-    
+
     #Select Random Population for sorting from the given list if IsEligibleCandidate
+    FinalSortedCandidates = []
+    FinalSortingScore = 0
     while len(IsEligibleCandidate)>=minimumCandidatePopulation:
-        data = random.sample(IsEligibleCandidate,minimumCandidatePopulation)
+        data = random.sample(IsEligibleCandidate,numberOfCandidateRequired)
         for candidate in data:
             for tempCandidate in IsEligibleCandidate:
                 if candidate['ID']==tempCandidate['ID']:
                     IsEligibleCandidate.remove(tempCandidate)
+        SelectedCandidatesScore = getFinalScore(data)
+        if SelectedCandidatesScore > FinalSortingScore:
+            FinalSortedCandidates = data
+            FinalSortingScore  = SelectedCandidatesScore
 
+        print("Next Hello ---------------------------------//------------------------")
 
+    pprint.pprint(data)
+    print(FinalSortingScore)
 
     # pprint.pprint(IsEligibleCandidate)
     # print(len(data))
