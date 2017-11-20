@@ -90,7 +90,6 @@ def assignWeight(candidate,availableCriteriaList):
 
 def checkEligibilty(candidateScore, tolerance):
     tolerance = tolerance + 2
-    tempCandidateScore = candidateScore
     FinalData = { k:v for k, v in candidateScore.items() if v }
     checkData = 0
     for a in FinalData:
