@@ -2,6 +2,7 @@ import random
 import pprint
 from Candidates import ImportCandidate
 import itertools
+from operator import itemgetter
 
 def processRawData(rawCsvData=None):
     columnHeader = rawCsvData[0]
@@ -33,7 +34,6 @@ def assignWeight(candidate,availableCriteriaList):
     weightageLocation           = 0.06
     tempCandidate = candidate
     score = 0
-    # candidateScore =
     for x in candidate:
         if x=='PERCENTAGE':
             if int(candidate[x])>=60:
@@ -102,12 +102,10 @@ def checkEligibilty(candidateScore, tolerance):
         status = False
     return status
 
-#Function to choose a candidate from a List without repetation
-# def choice_without_repetition(lst):
-#     i = 0
-#     while True:
-#         i = (i + random.randrange(1, len(lst))) % len(lst)
-#         yield lst[i]
+def getSortedFinalCandidateList(candidates, numberOfCandidateRequired):
+    sortedCandidatesList = sorted(candidates, key=itemgetter('score'), reverse=True)
+    return sortedCandidatesList[:numberOfCandidateRequired]
+
 
 def getFinalScore(candidates):
     score = 0
@@ -123,10 +121,9 @@ if __name__ == '__main__':
     processedData = processRawData(rawCsvData)
     availableCandidateList = processedData[1]
     availableCriteriaList  = processedData[0][2:]
-    print(type(availableCriteriaList))
     toleranceCriteria = int(input("There are %s Criteria in your Excel Sheet, Enter the minimum allowed Criteria: " %(len(availableCriteriaList))))
     numberOfCandidateRequired = int(input("How many candidates you are looking for?\n:"))
-    minimumCandidatePopulation = numberOfCandidateRequired + 3
+    minimumCandidatePopulation = numberOfCandidateRequired + 4
 
     #Assign Key "IsEligible" to available candidate list, so that it can  hold value for their Eligibility.
     for candidate in availableCandidateList:
@@ -146,21 +143,30 @@ if __name__ == '__main__':
     FinalSortedCandidates = []
     FinalSortingScore = 0
     while len(IsEligibleCandidate)>=minimumCandidatePopulation:
-        data = random.sample(IsEligibleCandidate,numberOfCandidateRequired)
+        #Random function to select random candidates from Eligible candidates list
+        data = random.sample(IsEligibleCandidate,minimumCandidatePopulation)
+
+        #For loop to remove the candidates currently selected in random list so that they do not get repeated in next iteration
         for candidate in data:
             for tempCandidate in IsEligibleCandidate:
                 if candidate['ID']==tempCandidate['ID']:
                     IsEligibleCandidate.remove(tempCandidate)
-        SelectedCandidatesScore = getFinalScore(data)
+        #Function to get the N number of Sorted list of candidates from the randomly selected candidates list, where N is the nnumber of candidates required by the user
+        SelectedCandidates = getSortedFinalCandidateList(data, numberOfCandidateRequired)
+
+        #Function to get Finalscore of the Selected Candidate so that it can be compared with the previous hired candidates to check for eligiblity
+        SelectedCandidatesScore = getFinalScore(SelectedCandidates)
         if SelectedCandidatesScore > FinalSortingScore:
-            FinalSortedCandidates = data
+            FinalSortedCandidates = SelectedCandidates
             FinalSortingScore  = SelectedCandidatesScore
 
-        print("Next Hello ---------------------------------//------------------------")
 
-    pprint.pprint(data)
-    print(FinalSortingScore)
 
-    # pprint.pprint(IsEligibleCandidate)
-    # print(len(data))
-    # pprint.pprint(data)
+    if FinalSortedCandidates == []:
+        print("############ Attention Please ############")
+        print("Provided Candidate List is too small for analysis, Kindly insert more data into the List \n OR try to sort with less criteria and Number of candidate required number")
+    else:
+        print("//-----------------------------------------Candidates Sorted Succesfully---------------------------------------------//")
+        for hiredCandidates in FinalSortedCandidates:
+            print("Name : "+hiredCandidates['NAME']+"      Finalscore = "+str(round(hiredCandidates['score'],2)))
+        print("Total Score of Currently Hired Candidates: "+ str(round(FinalSortingScore, 2)))
