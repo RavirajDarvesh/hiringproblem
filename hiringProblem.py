@@ -1,16 +1,15 @@
 import random
 import pprint
 from Candidates import ImportCandidate
-import itertools
 from operator import itemgetter
+import csv
+
 
 def processRawData(rawCsvData=None):
     columnHeader = rawCsvData[0]
-    rows         = rawCsvData[1:]
-    availableCandidateList = []
+    rows = rawCsvData[1:]
     data = {}
     candidatesList = []
-    #ListData Store the FinalData to be returned from this function
     ListData = []
     ListData.append(columnHeader)
 
@@ -23,15 +22,16 @@ def processRawData(rawCsvData=None):
 
     return ListData
 
+
 def assignWeight(candidate,availableCriteriaList):
-    weightagePercentage         = 0.15
-    weightageExperience         = 0.25
-    weightageBacklog            = 0.1
-    weightageLanguage           = 0.07
-    weightageCertification      = 0.20
-    weightageHobbie             = 0.05
-    weightagePH                 = 0.12
-    weightageLocation           = 0.06
+    weightagePercentage = 0.15
+    weightageExperience = 0.25
+    weightageBacklog = 0.1
+    weightageLanguage = 0.07
+    weightageCertification = 0.20
+    weightageHobbie = 0.05
+    weightagePH = 0.12
+    weightageLocation = 0.06
     tempCandidate = candidate
     score = 0
     for x in candidate:
@@ -84,13 +84,14 @@ def assignWeight(candidate,availableCriteriaList):
             else:
                 tempCandidate[x] = 0
     candidateScore = tempCandidate
-    candidateScore['score'] = score
+    candidateScore['SCORE'] = score
     tempCandidate = []
     return candidateScore
 
+
 def checkEligibilty(candidateScore, tolerance):
     tolerance = tolerance + 2
-    FinalData = { k:v for k, v in candidateScore.items() if v }
+    FinalData = {k: v for k, v in candidateScore.items() if v }
     checkData = 0
     for a in FinalData:
         checkData = checkData + 1
@@ -101,22 +102,40 @@ def checkEligibilty(candidateScore, tolerance):
         status = False
     return status
 
+
 def getSortedFinalCandidateList(candidates, numberOfCandidateRequired):
-    sortedCandidatesList = sorted(candidates, key=itemgetter('score'), reverse=True)
+    # pprint.pprint(candidates)
+    sortedCandidatesList = sorted(candidates, key=itemgetter('SCORE'),
+reverse=True)
+    # pprint.pprint(sortedCandidatesList)
     return sortedCandidatesList[:numberOfCandidateRequired]
 
 
 def getFinalScore(candidates):
     score = 0
     for candidate in candidates:
-        if candidate['score']:
-            score = score + float(candidate['score'])
+        if candidate['SCORE']:
+            score = score + float(candidate['SCORE'])
     return score
+
+
+def writeToCsv(csv_file_path, dict_data):
+    csv_file = open(csv_file_path, 'w', encoding='utf8',newline='')
+    writer = csv.writer(csv_file)
+    headers = dict_data[0].keys()
+    writer.writerow(headers)
+
+    for dat in dict_data:
+        line = []
+        for field in headers:
+            line.append(dat[field])
+        writer.writerow(line)
+    csv_file.close()
+
 
 if __name__ == '__main__':
     candidates = ImportCandidate()
     rawCsvData = candidates.candidatesList()
-    # print(candidatesList)
     processedData = processRawData(rawCsvData)
     availableCandidateList = processedData[1]
     availableCriteriaList  = processedData[0][2:]
@@ -128,14 +147,13 @@ if __name__ == '__main__':
     for candidate in availableCandidateList:
         eligibilty = checkEligibilty(assignWeight(candidate, availableCriteriaList), toleranceCriteria)
         if eligibilty==True:
-            candidate['isEligible'] = True
+            candidate['ISELIGIBLE'] = True
         else:
-            candidate['isEligible'] = False
+            candidate['ISELIGIBLE'] = False
     IsEligibleCandidate = []
     for number in range(len(availableCandidateList)):
-        if availableCandidateList[number]['isEligible']:
+        if availableCandidateList[number]['ISELIGIBLE']:
             IsEligibleCandidate.append(availableCandidateList[number])
-    # pprint.pprint(len(IsEligibleCandidate))
 
 
     #Select Random Population for sorting from the given list if IsEligibleCandidate
@@ -150,6 +168,7 @@ if __name__ == '__main__':
             for tempCandidate in IsEligibleCandidate:
                 if candidate['ID']==tempCandidate['ID']:
                     IsEligibleCandidate.remove(tempCandidate)
+
         #Function to get the N number of Sorted list of candidates from the randomly selected candidates list, where N is the nnumber of candidates required by the user
         SelectedCandidates = getSortedFinalCandidateList(data, numberOfCandidateRequired)
 
@@ -160,12 +179,16 @@ if __name__ == '__main__':
             FinalSortingScore  = SelectedCandidatesScore
 
 
-
     if FinalSortedCandidates == []:
         print("############ Attention Please ############")
         print("Provided Candidate List is too small for analysis, Kindly insert more data into the List \n OR try to sort with less criteria and Number of candidate required number")
     else:
         print("//-----------------------------------------Candidates Sorted Succesfully---------------------------------------------//")
-        for hiredCandidates in FinalSortedCandidates:
-            print("Name : "+hiredCandidates['NAME']+"      Finalscore = "+str(round(hiredCandidates['score'],2)))
-        print("Total Score of Currently Hired Candidates: "+ str(round(FinalSortingScore, 2)))
+        # for hiredCandidates in FinalSortedCandidates:
+        #     print("Name : "+hiredCandidates['NAME']+"      Finalscore = "+str(round(hiredCandidates['SCORE'],2)))
+        # print("Total Score of Currently Hired Candidates: "+ str(round(FinalSortingScore, 2)))
+        # pprint.pprint(FinalSortedCandidates)
+
+        print("Kindly check dict.csv file to get you results")
+        writeToCsv('dict.csv', FinalSortedCandidates)
+        print(rawCsvData)
