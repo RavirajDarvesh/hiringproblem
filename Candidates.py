@@ -1,5 +1,5 @@
 import csv
-import pprint
+import numpy
 
 
 class ImportCandidate:
