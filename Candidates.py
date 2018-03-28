@@ -1,5 +1,5 @@
 import csv
-import sys
+import pprint
 
 
 class ImportCandidate:
